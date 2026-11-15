@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0e14">
+  <meta name="description" content="RAY AI؛ رابط گفتگوی فارسی و انگلیسی با حالت نمایشی آنلاین و آفلاین.">
+  <title>RAY AI</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0b0e14;--panel:#111722;--line:#252e3d;--text:#f2f5fb;--muted:#9ba8ba;--accent:#579bff;--user:#397fe8;--assistant:#eaf0f8}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#172237,var(--bg) 55%);color:var(--text);font:15px/1.7 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;min-height:100vh;padding:18px}
+    button,textarea{font:inherit}.app{max-width:1180px;height:min(850px,calc(100vh - 36px));min-height:560px;margin:auto;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:#0d121b;display:grid;grid-template-columns:235px 1fr;box-shadow:0 24px 80px #0007}
+    aside{background:#10151e;border-left:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:14px}.brand{font-weight:850;font-size:25px;letter-spacing:2px}.brand b{color:var(--accent)}
+    .new,.history button,.clear,.mode,.send{border:1px solid var(--line);border-radius:11px;color:var(--text);background:#171e29;padding:10px 12px;cursor:pointer}.new{text-align:right}.label{font-size:12px;color:var(--muted);margin-top:5px}.history{display:flex;flex-direction:column;gap:7px;overflow:auto}.history button{text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.history button.active,.mode.active{border-color:var(--accent);background:#19283c}.clear{margin-top:auto;background:transparent;color:var(--muted)}
+    main{min-width:0;display:flex;flex-direction:column}.top{height:66px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;border-bottom:1px solid var(--line)}.modes{display:flex;gap:8px}.mode{padding:8px 13px;color:var(--muted)}.mode.active{color:var(--text)}.notice{font-size:12px;color:var(--muted)}
+    .messages{flex:1;overflow:auto;padding:24px clamp(14px,5vw,58px);display:flex;flex-direction:column;gap:14px}.welcome{margin:auto;text-align:center;color:var(--muted)}.welcome strong{display:block;color:var(--text);font-size:27px;margin-bottom:6px}.bubble{max-width:min(78%,700px);padding:12px 15px;border-radius:16px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.85}.bubble.user{align-self:flex-start;background:var(--user);color:white;border-bottom-right-radius:4px}.bubble.assistant{align-self:flex-end;background:var(--assistant);color:#141b26;border-bottom-left-radius:4px}
+    .composer{display:flex;gap:10px;padding:13px;border-top:1px solid var(--line);background:#10151e}.composer textarea{flex:1;resize:none;max-height:140px;min-height:46px;background:#0d121b;border:1px solid var(--line);border-radius:12px;padding:11px 13px;color:var(--text);outline:none}.composer textarea:focus{border-color:var(--accent)}.send{background:var(--accent);border:0;font-weight:700;min-width:82px}
+    @media(max-width:650px){body{padding:0}.app{height:100dvh;min-height:0;border-radius:0;grid-template-columns:1fr;border:0}aside{display:none}.top{height:60px;padding:0 12px}.notice{display:none}.messages{padding:18px 12px}.bubble{max-width:92%}.composer{padding:10px}.send{min-width:68px}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <div class="brand"><b>R</b>AY</div>
+      <button class="new" id="newChat">＋ گفتگوی جدید</button>
+      <div class="label">تاریخچهٔ گفتگو</div>
+      <div class="history" id="history"></div>
+      <button class="clear" id="clearHistory">حذف همهٔ گفتگوها</button>
+    </aside>
+    <main>
+      <header class="top">
+        <div class="modes"><button class="mode active" data-mode="online">🧠 آنلاین</button><button class="mode" data-mode="offline">👾 آفلاین</button></div>
+        <div class="notice">نسخهٔ نمایشی RAY AI</div>
+      </header>
+      <section class="messages" id="messages"></section>
+      <form class="composer" id="form"><textarea id="input" rows="1" placeholder="پیامت را بنویس… (Enter برای ارسال)"></textarea><button class="send" type="submit">ارسال</button></form>
+    </main>
+  </div>
+  <script>
+    (()=>{
+      const KEY='ray-ai-chats-v1', messages=document.querySelector('#messages'), history=document.querySelector('#history'), input=document.querySelector('#input');
+      let chats=[];try{chats=JSON.parse(localStorage.getItem(KEY)||'[]')}catch{};if(!Array.isArray(chats))chats=[];
+      let active=chats[0]?.id||null, mode='online';
+      const current=()=>chats.find(c=>c.id===active);
+      function persist(){try{localStorage.setItem(KEY,JSON.stringify(chats))}catch{}}
+      function start(){const c={id:Date.now().toString(),title:'گفتگوی جدید',items:[]};chats.unshift(c);active=c.id;persist();render();input.focus()}
+      function render(){
+        history.replaceChildren();chats.forEach(c=>{const b=document.createElement('button');b.textContent=c.title;b.className=c.id===active?'active':'';b.onclick=()=>{active=c.id;render()};history.append(b)});
+        messages.replaceChildren();const c=current();if(!c||!c.items.length){const w=document.createElement('div');w.className='welcome';w.innerHTML='<strong>سلام، من RAY هستم</strong>برای شروع پیام بنویس و گفتگوی تازه‌ای بساز.';messages.append(w);return}
+        c.items.forEach(m=>{const d=document.createElement('div');d.className='bubble '+m.role;d.textContent=m.text;messages.append(d)});messages.scrollTop=messages.scrollHeight;
+      }
+      document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('active',x===b))});
+      document.querySelector('#newChat').onclick=start;
+      document.querySelector('#clearHistory').onclick=()=>{if(confirm('همهٔ گفتگوها حذف شوند؟')){chats=[];active=null;persist();render()}};
+      document.querySelector('#form').onsubmit=e=>{e.preventDefault();const text=input.value.trim();if(!text)return;if(!current())start();const c=current();c.items.push({role:'user',text});if(c.title==='گفتگوی جدید')c.title=text.slice(0,30);const reply=mode==='online'?'این نسخهٔ نمایشی هنوز به سرویس هوش مصنوعی وصل نیست. برای پاسخ واقعی باید یک API امن و سرور به آن متصل شود.':'حالت آفلاین نمایشی است؛ برای پاسخ واقعی باید مدل محلی به پروژه اضافه شود.';c.items.push({role:'assistant',text:reply});input.value='';input.style.height='46px';persist();render()};
+      input.oninput=()=>{input.style.height='auto';input.style.height=Math.min(input.scrollHeight,140)+'px'};
+      input.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.querySelector('#form').requestSubmit()}};
+      render();
+    })();
+  </script>
+</body>
+</html>
